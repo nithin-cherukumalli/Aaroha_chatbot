@@ -305,10 +305,11 @@ class SupabaseIdentityProvider(IdentityProvider):
         )
 
     async def verify_access_token(self, token: str) -> tuple[str, str | None]:
+        clean_token = token.strip()
         async with httpx.AsyncClient(timeout=10) as client:
             response = await client.get(
                 f"{self._base}/auth/v1/user",
-                headers={"apikey": self._key, "Authorization": f"Bearer {token}"},
+                headers={"apikey": self._key, "Authorization": f"Bearer {clean_token}"},
             )
         if response.status_code != 200:
             raise ProviderError(
