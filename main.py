@@ -21,12 +21,20 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Aaroha RAG", lifespan=lifespan)
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/", include_in_schema=False)
 async def index():
     return FileResponse("static/index.html")
+
+
+@app.get("/manage", include_in_schema=False)
+async def manage():
+    return FileResponse("static/manage.html")
+
+
+# Mount static AFTER routes so FastAPI route matching takes priority
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/health")

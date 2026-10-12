@@ -160,6 +160,8 @@ async def answer(question: str) -> dict:
     system_prompt = (
         "You are a helpful assistant. Answer the user's question using only the "
         "provided source excerpts. Cite each claim as [1], [2], etc. "
+        "Write in clear, plain prose. Do not use markdown, asterisks, bullet points, "
+        "or any special formatting — just plain sentences and paragraphs. "
         "If the sources don't contain the answer, say so clearly.\n\n"
         f"Sources:\n{context}"
     )

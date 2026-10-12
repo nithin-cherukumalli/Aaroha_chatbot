@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aaroha — Manage Documents</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh; background: #f7f8fa; color: #1a1a2e;
+    }
+
+    header {
+      background: #fff; border-bottom: 1px solid #e8eaf0;
+      padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand { font-size: 16px; font-weight: 700; color: #4f46e5; letter-spacing: -.3px; }
+    .brand span { color: #6b7280; font-weight: 400; margin-left: 6px; font-size: 14px; }
+    .back-link {
+      font-size: 13px; color: #4f46e5; text-decoration: none; font-weight: 500;
+      padding: 7px 14px; border: 1px solid #e0deff; border-radius: 8px;
+      transition: background .15s;
+    }
+    .back-link:hover { background: #f0efff; }
+
+    .page { max-width: 760px; margin: 0 auto; padding: 40px 24px; }
+
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: #6b7280; margin-bottom: 32px; }
+    .persist-note {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #ecfdf5; color: #059669; font-size: 12.5px;
+      padding: 5px 12px; border-radius: 20px; margin-bottom: 32px;
+      border: 1px solid #bbf7d0;
+    }
+
+    /* Upload card */
+    .card {
+      background: #fff; border: 1px solid #e8eaf0; border-radius: 14px;
+      padding: 28px; margin-bottom: 28px;
+    }
+    .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+
+    .drop-zone {
+      border: 2px dashed #d4d8e8; border-radius: 10px;
+      padding: 36px 20px; text-align: center; cursor: pointer;
+      transition: all .18s; margin-bottom: 14px;
+    }
+    .drop-zone:hover, .drop-zone.over { border-color: #4f46e5; background: #f5f3ff; }
+    .drop-zone .dz-icon { font-size: 34px; margin-bottom: 10px; }
+    .drop-zone p { font-size: 14px; color: #6b7280; }
+    .drop-zone p strong { color: #4f46e5; cursor: pointer; }
+    .drop-zone .formats { font-size: 12px; color: #9ca3af; margin-top: 5px; }
+    #file-input { display: none; }
+
+    .progress-list { display: flex; flex-direction: column; gap: 10px; }
+    .progress-item {
+      display: flex; align-items: center; gap: 12px;
+      background: #fafafa; border: 1px solid #f0f0f0; border-radius: 8px; padding: 10px 14px;
+      font-size: 13px;
+    }
+    .progress-item .pi-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #374151; }
+    .progress-item .pi-status { font-size: 12px; white-space: nowrap; }
+    .pi-status.uploading { color: #6366f1; }
+    .pi-status.ok  { color: #16a34a; }
+    .pi-status.err { color: #dc2626; }
+
+    /* Documents table */
+    .doc-count { font-size: 13px; color: #6b7280; margin-bottom: 12px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { border-bottom: 2px solid #f0f0f0; }
+    th { text-align: left; font-size: 11.5px; font-weight: 600; color: #9ca3af;
+         text-transform: uppercase; letter-spacing: .06em; padding: 0 12px 10px; }
+    tbody tr { border-bottom: 1px solid #f7f8fa; transition: background .1s; }
+    tbody tr:hover { background: #fafafa; }
+    td { padding: 12px; font-size: 13.5px; color: #374151; }
+    td.filename { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    td.chunks { color: #6b7280; }
+    .del-btn {
+      background: none; border: 1px solid #fecaca; color: #ef4444;
+      border-radius: 6px; padding: 4px 10px; font-size: 12px;
+      cursor: pointer; transition: all .15s;
+    }
+    .del-btn:hover { background: #fef2f2; }
+
+    .empty-docs { text-align: center; padding: 40px 20px; color: #c4c8d4; font-size: 14px; }
+
+    .refresh-btn {
+      background: none; border: 1px solid #e8eaf0; border-radius: 8px;
+      padding: 6px 14px; font-size: 13px; color: #6b7280; cursor: pointer;
+      transition: all .15s; float: right; margin-bottom: 12px;
+    }
+    .refresh-btn:hover { background: #f0f0f0; }
+
+    .toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: #1a1a2e; color: #fff; padding: 12px 18px;
+      border-radius: 10px; font-size: 13px; opacity: 0;
+      transition: opacity .25s; pointer-events: none; max-width: 320px;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">⚡ Aaroha <span>Document Manager</span></div>
+  <a class="back-link" href="/">← Back to Chat</a>
+</header>
+
+<div class="page">
+  <h1>Knowledge Base</h1>
+  <p class="subtitle">Upload documents to train the assistant. Supported formats: PDF, TXT, DOCX.</p>
+  <div class="persist-note">
+    ✅ Documents are stored permanently in Qdrant Cloud — they persist across restarts and deployments.
+  </div>
+
+  <!-- Upload -->
+  <div class="card">
+    <h2>Upload Documents</h2>
+    <div class="drop-zone" id="drop-zone">
+      <div class="dz-icon">📂</div>
+      <p>Drop files here or <strong onclick="document.getElementById('file-input').click()">browse</strong></p>
+      <p class="formats">PDF · TXT · DOCX &nbsp;·&nbsp; Up to 50 MB</p>
+    </div>
+    <input type="file" id="file-input" accept=".pdf,.txt,.docx" multiple>
+    <div class="progress-list" id="progress-list"></div>
+  </div>
+
+  <!-- Documents -->
+  <div class="card">
+    <h2>
+      Uploaded Documents
+      <button class="refresh-btn" onclick="loadDocs()">↻ Refresh</button>
+    </h2>
+    <div class="doc-count" id="doc-count"></div>
+    <div id="doc-table-wrap"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const dropZone   = document.getElementById('drop-zone');
+  const fileInput  = document.getElementById('file-input');
+  const progList   = document.getElementById('progress-list');
+  const docWrap    = document.getElementById('doc-table-wrap');
+  const docCount   = document.getElementById('doc-count');
+  const toast      = document.getElementById('toast');
+
+  // ── Toast ──
+  let toastTimer;
+  function showToast(msg) {
+    clearTimeout(toastTimer);
+    toast.textContent = msg; toast.classList.add('show');
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Upload ──
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('over');
+    [...e.dataTransfer.files].forEach(uploadFile);
+  });
+  fileInput.addEventListener('change', () => {
+    [...fileInput.files].forEach(uploadFile);
+    fileInput.value = '';
+  });
+
+  async function uploadFile(file) {
+    const item = document.createElement('div');
+    item.className = 'progress-item';
+    item.innerHTML = `<span>📄</span><span class="pi-name">${esc(file.name)}</span><span class="pi-status uploading">Uploading…</span>`;
+    progList.prepend(item);
+    const statusEl = item.querySelector('.pi-status');
+
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const r = await fetch('/upload', { method: 'POST', body: fd });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || 'Upload failed');
+      statusEl.textContent = `✓ ${d.chunks} chunks indexed`;
+      statusEl.className = 'pi-status ok';
+      showToast(`"${file.name}" uploaded — ${d.chunks} chunks stored in Qdrant`);
+      loadDocs();
+    } catch(e) {
+      statusEl.textContent = `✗ ${e.message}`;
+      statusEl.className = 'pi-status err';
+    }
+  }
+
+  // ── Documents ──
+  async function loadDocs() {
+    const r = await fetch('/documents');
+    const { documents } = await r.json();
+
+    if (!documents.length) {
+      docCount.textContent = '';
+      docWrap.innerHTML = '<div class="empty-docs">No documents uploaded yet. Add some above to get started.</div>';
+      return;
+    }
+
+    const total = documents.reduce((s, d) => s + d.chunks, 0);
+    docCount.textContent = `${documents.length} document${documents.length !== 1 ? 's' : ''} · ${total} total chunks in Qdrant`;
+
+    docWrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>File name</th>
+            <th>Chunks</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${documents.map(d => `
+            <tr>
+              <td class="filename" title="${esc(d.filename)}">📄 ${esc(d.filename)}</td>
+              <td class="chunks">${d.chunks}</td>
+              <td><button class="del-btn" onclick="deleteDoc('${esc(d.filename)}')">Remove</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  async function deleteDoc(filename) {
+    if (!confirm(`Remove "${filename}" from the knowledge base?\n\nThis deletes all its chunks from Qdrant.`)) return;
+    await fetch('/documents/' + encodeURIComponent(filename), { method: 'DELETE' });
+    showToast(`"${filename}" removed`);
+    loadDocs();
+  }
+
+  loadDocs();
+</script>
+</body>
+</html>
