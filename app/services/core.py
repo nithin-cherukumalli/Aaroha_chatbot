@@ -486,11 +486,11 @@ class KnowledgeService:
             job, document = session.get(Job, job_id), session.get(Document, document_id)
             job.state, job.stage, job.lease_expires_at = (
                 JobState.SUCCEEDED.value,
-                "awaiting_approval",
+                "ready",
                 None,
             )
             document.state, document.warnings, document.passage_count = (
-                DocumentState.AWAITING_APPROVAL.value,
+                DocumentState.READY.value,
                 warnings,
                 passage_count,
             )
