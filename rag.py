@@ -62,6 +62,13 @@ def init() -> None:
             COLLECTION,
             vectors_config=VectorParams(size=EMBED_DIM, distance=Distance.COSINE),
         )
+    # Payload index on filename is required for filtered deletes and scrolls.
+    # create_payload_index is idempotent — safe to call on every startup.
+    _qdrant.create_payload_index(
+        COLLECTION,
+        field_name="filename",
+        field_schema="keyword",
+    )
 
 
 # ---------------------------------------------------------------------------
