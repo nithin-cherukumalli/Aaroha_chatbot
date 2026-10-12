@@ -132,50 +132,44 @@
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  function scrollBottom() {
+    requestAnimationFrame(() => { msgs.scrollTop = msgs.scrollHeight; });
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('typing');
+    if (t && t.parentNode) t.parentNode.removeChild(t);
+  }
+
   function addMsg(role, text, sources) {
-    document.getElementById('empty')?.remove();
+    const empty = document.getElementById('empty');
+    if (empty && empty.parentNode) empty.parentNode.removeChild(empty);
 
-    const row = document.createElement('div');
-    row.className = `msg-row ${role}`;
+    const sourcesHtml = (sources && sources.length)
+      ? '<div class="sources">' + sources.map(f => `<span class="src-tag" title="${esc(f)}">${esc(f)}</span>`).join('') + '</div>'
+      : '';
 
-    if (sources && sources.length) {
-      // Wrap bubble + sources together so they share max-width alignment
-      const wrap = document.createElement('div');
-      wrap.style.cssText = 'max-width:72%;display:flex;flex-direction:column;';
+    const html = `<div class="msg-row ${role}">
+      <div style="max-width:72%;display:flex;flex-direction:column;">
+        <div class="bubble">${esc(text)}</div>
+        ${sourcesHtml}
+      </div>
+    </div>`;
 
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble';
-      bubble.textContent = text;
-      wrap.appendChild(bubble);
-
-      const srcRow = document.createElement('div');
-      srcRow.className = 'sources';
-      sources.forEach(f => {
-        const t = document.createElement('span');
-        t.className = 'src-tag'; t.textContent = f; t.title = f;
-        srcRow.appendChild(t);
-      });
-      wrap.appendChild(srcRow);
-      row.appendChild(wrap);
-    } else {
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble';
-      bubble.textContent = text;
-      row.appendChild(bubble);
-    }
-
-    msgs.appendChild(row);
-    msgs.scrollTop = msgs.scrollHeight;
+    msgs.insertAdjacentHTML('beforeend', html);
+    scrollBottom();
   }
 
   function showTyping() {
-    const row = document.createElement('div');
-    row.className = 'msg-row bot'; row.id = 'typing';
-    row.innerHTML = `<div class="bubble"><div class="dots">
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-    </div></div>`;
-    msgs.appendChild(row);
-    msgs.scrollTop = msgs.scrollHeight;
+    msgs.insertAdjacentHTML('beforeend', `
+      <div class="msg-row bot" id="typing">
+        <div class="bubble">
+          <div class="dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+      </div>`);
+    scrollBottom();
   }
 
   async function send() {
@@ -192,11 +186,11 @@
         body: JSON.stringify({ question: q }),
       });
       const d = await r.json();
-      document.getElementById('typing')?.remove();
+      removeTyping();
       if (!r.ok) throw new Error(d.detail || 'Error');
       addMsg('bot', d.answer, d.sources);
     } catch(e) {
-      document.getElementById('typing')?.remove();
+      removeTyping();
       addMsg('bot', 'Error: ' + e.message);
     }
     sendBtn.disabled = false;
