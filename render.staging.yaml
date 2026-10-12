@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ai-engineering-knowledge-assistant-staging
+    runtime: docker
+    plan: free
+    healthCheckPath: /health/live
+    dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: staging
+      - key: INGESTION_RUNNER
+        value: embedded

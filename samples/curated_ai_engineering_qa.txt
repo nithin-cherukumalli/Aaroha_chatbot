@@ -1,0 +1,12 @@
+Question: What is retrieval-augmented generation (RAG)?
+Answer: RAG retrieves relevant approved source material before generation so the answer can be grounded in that evidence and cite it. It improves traceability but does not guarantee correctness.
+
+Question: Why do chunks overlap?
+Answer: A small overlap helps preserve meaning that crosses a chunk boundary. Overlap should remain smaller than the target chunk size to avoid excessive duplication.
+
+Question: What do embeddings do in retrieval?
+Answer: Embeddings represent text in a vector space so semantically related questions and passages can be compared. Equal vector dimensions do not prove that two embedding models are compatible.
+
+Question: What is a context window?
+Answer: A context window is the amount of input and output text a language model can process in one request. Prompt instructions, the question, source passages, and the reserved output all consume this budget.
+
