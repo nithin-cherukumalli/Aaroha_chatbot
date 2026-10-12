@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import traceback
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -12,6 +14,8 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+logging.basicConfig(level=logging.INFO)
 
 
 @asynccontextmanager
@@ -82,4 +86,5 @@ async def chat(req: ChatRequest):
     try:
         return await rag.answer(req.question.strip())
     except Exception as exc:
+        logging.error("Chat error: %s", traceback.format_exc())
         raise HTTPException(status_code=502, detail=str(exc))
