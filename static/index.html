@@ -138,26 +138,30 @@
     const row = document.createElement('div');
     row.className = `msg-row ${role}`;
 
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
-    bubble.textContent = text;          // plain text — no HTML injection
-    row.appendChild(bubble);
-
     if (sources && sources.length) {
-      const s = document.createElement('div');
-      s.className = 'sources';
-      // sources sit below the bubble, outside it
+      // Wrap bubble + sources together so they share max-width alignment
       const wrap = document.createElement('div');
       wrap.style.cssText = 'max-width:72%;display:flex;flex-direction:column;';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
       wrap.appendChild(bubble);
+
+      const srcRow = document.createElement('div');
+      srcRow.className = 'sources';
       sources.forEach(f => {
         const t = document.createElement('span');
         t.className = 'src-tag'; t.textContent = f; t.title = f;
-        s.appendChild(t);
+        srcRow.appendChild(t);
       });
-      wrap.appendChild(s);
+      wrap.appendChild(srcRow);
       row.appendChild(wrap);
-      row.removeChild(bubble);
+    } else {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+      row.appendChild(bubble);
     }
 
     msgs.appendChild(row);
