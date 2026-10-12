@@ -137,14 +137,19 @@ def ingest(filename: str, data: bytes) -> int:
 # ---------------------------------------------------------------------------
 def search(question: str) -> list[dict]:
     vec = _embed([question])[0]
-    hits = _qdrant.search(COLLECTION, query_vector=vec, limit=TOP_K, with_payload=True)
+    result = _qdrant.query_points(
+        collection_name=COLLECTION,
+        query=vec,
+        limit=TOP_K,
+        with_payload=True,
+    )
     return [
         {
             "text": h.payload["text"],
             "filename": h.payload["filename"],
             "score": round(h.score, 3),
         }
-        for h in hits
+        for h in result.points
     ]
 
 
